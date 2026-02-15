@@ -313,7 +313,7 @@ export function HomepageControlDashboard({
                   </div>
 
                   <div className="ml-6">
-                    <Badge variant={enableHomepage ? "default" : "secondary"}>
+                    <Badge variant={enableHomepage ? "default" : "secondary"} className="font-semibold">
                       {enableHomepage 
                         ? (isPublished ? "Ready" : "Incomplete")
                         : "Not Configured"}
@@ -362,7 +362,7 @@ export function HomepageControlDashboard({
                       {errors.banner_image_url && (
                         <p className="text-sm text-destructive">{errors.banner_image_url.message}</p>
                       )}
-                      <Badge variant={bannerImageUrlForm ? "default" : "destructive"}>
+                      <Badge variant={bannerImageUrlForm ? "default" : "destructive"} className="font-semibold">
                         {bannerImageUrlForm ? "Ready" : "Image Required"}
                       </Badge>
                     </div>
@@ -411,7 +411,7 @@ export function HomepageControlDashboard({
                         {errors.tile_image_url && (
                           <p className="text-sm text-destructive">{errors.tile_image_url.message}</p>
                         )}
-                        <Badge variant={tileImageUrlForm ? "default" : "destructive"}>
+                        <Badge variant={tileImageUrlForm ? "default" : "destructive"} className="font-semibold">
                           {tileImageUrlForm ? "Ready" : "Image Required"}
                         </Badge>
                       </div>
@@ -434,7 +434,7 @@ export function HomepageControlDashboard({
                     <div>
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm font-medium">Overall Status:</span>
-                        <Badge variant={readinessPercentage === 100 ? "default" : readinessPercentage >= 60 ? "secondary" : "destructive"}>
+                        <Badge variant={readinessPercentage === 100 ? "default" : readinessPercentage >= 60 ? "secondary" : "destructive"} className="font-semibold">
                           {readinessPercentage === 100 ? "Ready" : readinessPercentage >= 60 ? "Incomplete" : "Not Ready"}
                         </Badge>
                       </div>

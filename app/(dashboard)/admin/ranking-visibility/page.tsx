@@ -33,6 +33,8 @@ import { SafetyWarnings } from "@/components/content/SafetyWarnings";
 import { ContentStateBadge } from "@/components/content/ContentStateBadge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { playSound } from "@/lib/utils/sounds";
+import { motion } from "framer-motion";
 
 interface StoryWithCounts extends Story {
   episode_count?: number;
@@ -53,6 +55,30 @@ export default function RankingVisibilityPage() {
 
   useEffect(() => {
     fetchStories();
+    
+    // Initialize audio context on first user interaction
+    const initAudio = () => {
+      if (typeof window !== 'undefined') {
+        try {
+          playSound('click');
+        } catch (e) {
+          // Silently fail
+        }
+      }
+    };
+    
+    // Listen for first user interaction
+    const events = ['mousedown', 'touchstart', 'keydown'];
+    const initOnce = () => {
+      initAudio();
+      events.forEach(e => document.removeEventListener(e, initOnce));
+    };
+    
+    events.forEach(e => document.addEventListener(e, initOnce, { once: true }));
+    
+    return () => {
+      events.forEach(e => document.removeEventListener(e, initOnce));
+    };
   }, []);
 
   const fetchStories = async () => {
@@ -377,48 +403,81 @@ export default function RankingVisibilityPage() {
   rankedStories.sort((a, b) => (a.homepage_rank || 0) - (b.homepage_rank || 0));
 
   return (
-    <div className="container mx-auto py-10 px-8 max-w-7xl">
-      <Breadcrumb items={[{ label: "Ranking & Visibility" }]} />
-      <div className="mb-10">
-        <h1 className="text-4xl font-bold tracking-tight mb-3">Ranking & Visibility</h1>
-        <p className="text-muted-foreground text-base leading-relaxed">
-          Control homepage ordering, banner inclusion, and new launch placement for all stories
-        </p>
-      </div>
+    <div className="min-h-screen">
+      <div className="container mx-auto py-8 px-6 max-w-[1800px] relative">
+        {/* Decorative elements */}
+        <div className="absolute top-0 left-0 w-96 h-96 bg-gold-500/5 dark:bg-gold-500/10 rounded-full blur-3xl -z-10" />
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-blue-primary/10 dark:bg-blue-primary/20 rounded-full blur-3xl -z-10" />
+        <Breadcrumb items={[{ label: "Ranking & Visibility" }]} />
+        <motion.div 
+          className="mb-8"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+          style={{ willChange: 'transform, opacity' }}
+        >
+          <h1 className="text-4xl font-display font-bold tracking-tight mb-2 text-slate-900">
+            Ranking & Visibility
+          </h1>
+          <p className="text-slate-500 text-base leading-relaxed">
+            Control homepage ordering, banner inclusion, and new launch placement
+          </p>
+        </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        {/* Explanation Card */}
-        <Card className="border-border/60 bg-blue-50/30 dark:bg-blue-950/10 lg:col-span-2">
-          <CardContent className="pt-6">
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-foreground">
-                How this works:
-              </p>
-              <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
-                <li><strong>Homepage Rank:</strong> Lower numbers appear first (Rank 1 = top priority). Unranked stories won&apos;t appear in homepage sections.</li>
-                <li><strong>Banner:</strong> Stories in the banner carousel require a banner image. Enable/disable instantly.</li>
-                <li><strong>New Launches:</strong> Stories in the new launches section require a tile image. Each can have its own ranking.</li>
-                <li>Changes are saved immediately when you click &quot;Save&quot; or toggle switches.</li>
-              </ul>
-            </div>
-          </CardContent>
-        </Card>
+        <motion.div 
+          className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
+          style={{ willChange: 'transform, opacity' }}
+        >
+          {/* Explanation Card */}
+          <Card className="border border-blue-primary/20 dark:border-blue-primary/10 bg-white/70 dark:bg-navy/70 backdrop-blur-sm lg:col-span-2 hover:shadow-lg hover:border-gold-500/30 dark:hover:border-gold-500/20 transition-all duration-300 shadow-sm">
+            <CardContent className="pt-5 pb-5">
+              <div className="space-y-3">
+                <p className="text-sm font-semibold text-blue-primary dark:text-blue-400 flex items-center gap-2">
+                  <span className="text-lg">💡</span>
+                  How this works
+                </p>
+                <ul className="text-xs text-slate-600 dark:text-slate-300 space-y-1.5 list-none">
+                  <li className="flex items-start gap-2">
+                    <span className="text-gold-500 dark:text-gold-400 font-bold mt-0.5 text-xs">•</span>
+                    <span><strong className="text-slate-800 dark:text-slate-200">Homepage Rank:</strong> Lower numbers appear first. Unranked stories won&apos;t appear.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-gold-500 dark:text-gold-400 font-bold mt-0.5 text-xs">•</span>
+                    <span><strong className="text-slate-800 dark:text-slate-200">Banner:</strong> Requires a banner image. Enable/disable instantly.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-gold-500 dark:text-gold-400 font-bold mt-0.5 text-xs">•</span>
+                    <span><strong className="text-slate-800 dark:text-slate-200">New Launches:</strong> Requires a tile image. Each can have its own ranking.</span>
+                  </li>
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
 
-        {/* Homepage Preview */}
-        <div className="lg:col-span-1">
-          <HomepagePreview stories={stories} />
-        </div>
-      </div>
+          {/* Homepage Preview */}
+          <motion.div 
+            className="lg:col-span-1"
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+            style={{ willChange: 'transform, opacity' }}
+          >
+            <HomepagePreview stories={stories} />
+          </motion.div>
+        </motion.div>
 
-      {/* Safety Warnings */}
-      {!loading && (
-        <div className="mb-8">
-          <SafetyWarnings 
-            stories={stories} 
-            episodesCount={Object.fromEntries(stories.map(s => [s.id, s.episode_count || 0]))}
-          />
-        </div>
-      )}
+        {/* Safety Warnings */}
+        {!loading && (
+          <div className="mb-6">
+            <SafetyWarnings 
+              stories={stories} 
+              episodesCount={Object.fromEntries(stories.map(s => [s.id, s.episode_count || 0]))}
+            />
+          </div>
+        )}
 
       {loading ? (
         <Card className="border-border/60">
@@ -438,14 +497,26 @@ export default function RankingVisibilityPage() {
         </Card>
       ) : (
         <div className="space-y-6">
-          {/* Filters */}
-          <Card className="border-border/60">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-4 flex-wrap">
+        {/* Filters */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.25, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+          style={{ willChange: 'transform, opacity' }}
+        >
+          <Card className="border border-blue-primary/20 dark:border-blue-primary/10 bg-white/80 dark:bg-navy/80 backdrop-blur-sm shadow-sm hover:shadow-md hover:border-gold-500/30 dark:hover:border-gold-500/20 transition-all duration-300">
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center gap-3 flex-wrap">
                 <div className="flex items-center gap-2">
-                  <label className="text-sm font-medium text-muted-foreground">Status:</label>
-                  <Select value={statusFilter} onValueChange={(value: any) => setStatusFilter(value)}>
-                    <SelectTrigger className="w-32">
+                  <label className="text-xs font-medium text-blue-primary dark:text-blue-400">Status:</label>
+                  <Select 
+                    value={statusFilter} 
+                    onValueChange={(value: any) => {
+                      playSound('toggle');
+                      setStatusFilter(value);
+                    }}
+                  >
+                    <SelectTrigger className="w-32 h-9 border-2 border-blue-primary/30 dark:border-blue-primary/20 hover:border-gold-500/50 dark:hover:border-gold-500/40 transition-all text-sm">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -456,9 +527,15 @@ export default function RankingVisibilityPage() {
                   </Select>
                 </div>
                 <div className="flex items-center gap-2">
-                  <label className="text-sm font-medium text-muted-foreground">Visibility:</label>
-                  <Select value={visibilityFilter} onValueChange={(value: any) => setVisibilityFilter(value)}>
-                    <SelectTrigger className="w-40">
+                  <label className="text-xs font-medium text-slate-600">Visibility:</label>
+                  <Select 
+                    value={visibilityFilter} 
+                    onValueChange={(value: any) => {
+                      playSound('toggle');
+                      setVisibilityFilter(value);
+                    }}
+                  >
+                    <SelectTrigger className="w-40 h-9 border border-slate-300 hover:border-blue-400 transition-all text-sm">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -471,9 +548,15 @@ export default function RankingVisibilityPage() {
                   </Select>
                 </div>
                 <div className="flex items-center gap-2">
-                  <label className="text-sm font-medium text-muted-foreground">Language:</label>
-                  <Select value={languageFilter} onValueChange={(value: any) => setLanguageFilter(value)}>
-                    <SelectTrigger className="w-32">
+                  <label className="text-xs font-medium text-slate-600">Language:</label>
+                  <Select 
+                    value={languageFilter} 
+                    onValueChange={(value: any) => {
+                      playSound('toggle');
+                      setLanguageFilter(value);
+                    }}
+                  >
+                    <SelectTrigger className="w-32 h-9 border-2 border-blue-primary/30 dark:border-blue-primary/20 hover:border-gold-500/50 dark:hover:border-gold-500/40 transition-all text-sm">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -484,104 +567,127 @@ export default function RankingVisibilityPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="ml-auto text-sm text-muted-foreground">
-                  Showing {filteredStories.length} of {stories.length} stories
+                <div className="ml-auto text-xs font-medium text-blue-primary dark:text-blue-400 bg-blue-primary/10 dark:bg-blue-primary/5 border border-gold-500/20 dark:border-gold-500/10 px-2.5 py-1.5 rounded-md">
+                  Showing <span className="font-semibold text-gold-500 dark:text-gold-400">{filteredStories.length}</span> of <span className="font-semibold text-blue-primary dark:text-blue-400">{stories.length}</span>
                 </div>
               </div>
             </CardContent>
           </Card>
+        </motion.div>
 
-          {/* Table Header */}
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="border-b border-border/60">
-                  <th className="text-left p-3 text-sm font-semibold text-muted-foreground">Story</th>
-                  <th className="text-left p-3 text-sm font-semibold text-muted-foreground">Status</th>
-                  <th className="text-left p-3 text-sm font-semibold text-muted-foreground">Homepage Rank</th>
-                  <th className="text-left p-3 text-sm font-semibold text-muted-foreground">Banner</th>
-                  <th className="text-left p-3 text-sm font-semibold text-muted-foreground">Banner Rank</th>
-                  <th className="text-left p-3 text-sm font-semibold text-muted-foreground">New Launch</th>
-                  <th className="text-left p-3 text-sm font-semibold text-muted-foreground">New Launch Rank</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredStories.map((story) => {
+        {/* Table */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+          style={{ willChange: 'transform, opacity' }}
+        >
+          <Card className="border border-blue-primary/20 dark:border-blue-primary/10 bg-white/90 dark:bg-navy/90 backdrop-blur-sm shadow-md hover:border-gold-500/30 dark:hover:border-gold-500/20 overflow-hidden transition-all duration-300">
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="border-b-2 border-blue-primary/30 dark:border-blue-primary/20 bg-gradient-to-r from-blue-primary/10 via-gold-500/5 to-blue-primary/10 dark:from-blue-primary/5 dark:via-gold-500/3 dark:to-blue-primary/5">
+                    <th className="text-left p-3 text-xs font-bold text-blue-primary dark:text-blue-400 uppercase tracking-wider">Story</th>
+                    <th className="text-left p-3 text-xs font-bold text-blue-primary dark:text-blue-400 uppercase tracking-wider">Status</th>
+                    <th className="text-left p-3 text-xs font-bold text-blue-primary dark:text-blue-400 uppercase tracking-wider">Homepage Rank</th>
+                    <th className="text-left p-3 text-xs font-bold text-blue-primary dark:text-blue-400 uppercase tracking-wider">Banner</th>
+                    <th className="text-left p-3 text-xs font-bold text-blue-primary dark:text-blue-400 uppercase tracking-wider">Banner Rank</th>
+                    <th className="text-left p-3 text-xs font-bold text-gold-500 dark:text-gold-400 uppercase tracking-wider">New Launch</th>
+                    <th className="text-left p-3 text-xs font-bold text-gold-500 dark:text-gold-400 uppercase tracking-wider">New Launch Rank</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredStories.map((story, index) => {
                   const currentHomepageRank = editingRanks[story.id]?.homepage ?? story.homepage_rank;
                   const currentNewLaunchRank = editingRanks[story.id]?.newLaunch ?? story.new_launch_rank;
                   const hasHomepageCollision = currentHomepageRank !== null && rankCollisions[currentHomepageRank]?.includes(story.title);
                   const bannerImage = bannerImageUrls[story.id] || story.banner_image_url || "";
                   const tileImage = tileImageUrls[story.id] || story.tile_image_url || "";
 
-                  return (
-                    <tr 
-                      key={story.id} 
-                      className="border-b border-border/40 hover:bg-muted/20 transition-colors duration-150"
-                      aria-label={`Story: ${story.title}`}
-                    >
-                      {/* Story Info */}
-                      <td className="p-3">
-                        <div className="space-y-2">
-                          <div className="font-semibold">{story.title}</div>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <ContentStateBadge story={story} episodeCount={story.episode_count || 0} />
-                            <Badge variant="outline" className="text-xs">
-                              {languageLabels[story.language] || story.language}
-                            </Badge>
-                            <span className="text-xs text-muted-foreground/70">
-                              {story.episode_count || 0} episode{(story.episode_count || 0) !== 1 ? "s" : ""}
-                            </span>
+                    return (
+                      <tr 
+                        key={story.id} 
+                        className="border-b border-blue-primary/10 dark:border-blue-primary/5 hover:bg-gradient-to-r hover:from-blue-50/50 hover:via-gold-50/20 hover:to-blue-50/50 dark:hover:from-blue-950/30 dark:hover:via-gold-950/15 dark:hover:to-blue-950/30 transition-all duration-300 ease-out-smooth group gpu-accelerated"
+                        aria-label={`Story: ${story.title}`}
+                        style={{ willChange: 'background-color' }}
+                      >
+                        {/* Story Info */}
+                        <td className="p-3">
+                          <div className="space-y-1.5">
+                            <div className="font-semibold text-sm text-slate-900 group-hover:text-blue-600 transition-colors duration-200">
+                              {story.title}
+                            </div>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <ContentStateBadge story={story} episodeCount={story.episode_count || 0} />
+                              <Badge variant="outline" className="text-xs border-slate-200 bg-slate-50">
+                                {languageLabels[story.language] || story.language}
+                              </Badge>
+                              <span className="text-xs text-slate-400">
+                                {story.episode_count || 0} ep{(story.episode_count || 0) !== 1 ? "s" : ""}
+                              </span>
+                            </div>
                           </div>
-                        </div>
-                      </td>
+                        </td>
 
-                      {/* Published Status */}
-                      <td className="p-3">
-                        <Badge variant={story.is_published ? "default" : "secondary"} className="text-xs">
-                          {story.is_published ? (
-                            <>
-                              <Eye className="h-3 w-3 mr-1" />
-                              Published
-                            </>
-                          ) : (
-                            <>
-                              <EyeOff className="h-3 w-3 mr-1" />
-                              Draft
-                            </>
-                          )}
-                        </Badge>
-                      </td>
-
-                      {/* Homepage Rank */}
-                      <td className="p-3">
-                        <div className="flex items-center gap-2">
-                          <Input
-                            type="number"
-                            min="0"
-                            value={currentHomepageRank === null ? "" : currentHomepageRank}
-                            onChange={(e) => handleRankChange(story.id, "homepage", e.target.value)}
-                            className="w-20 h-8 transition-all"
-                            disabled={saving === `${story.id}-homepage` || !story.is_published}
-                            placeholder="Unranked"
-                            aria-label={`Homepage rank for ${story.title}`}
-                            title={!story.is_published ? "Publish story first to set homepage rank" : "Enter homepage rank (lower = higher priority)"}
-                          />
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleSaveRank(story.id, "homepage")}
-                            disabled={saving === `${story.id}-homepage` || currentHomepageRank === story.homepage_rank || !story.is_published}
-                            className="h-8 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                            aria-label={`Save homepage rank for ${story.title}`}
-                            title={currentHomepageRank === story.homepage_rank ? "No changes to save" : !story.is_published ? "Publish story first" : "Save rank"}
+                        {/* Published Status */}
+                        <td className="p-3">
+                          <Badge 
+                            variant={story.is_published ? "default" : "secondary"} 
+                            className={`text-xs font-semibold ${
+                              story.is_published 
+                                ? "bg-emerald-200 dark:bg-emerald-900/40 text-emerald-900 dark:text-emerald-100 border-2 border-emerald-400 dark:border-emerald-600" 
+                                : "bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-slate-100 border-2 border-slate-400 dark:border-slate-600"
+                            }`}
                           >
-                            {saving === `${story.id}-homepage` ? (
-                              <span className="animate-pulse">...</span>
+                            {story.is_published ? (
+                              <>
+                                <Eye className="h-3 w-3 mr-1" />
+                                Published
+                              </>
                             ) : (
-                              "Save"
+                              <>
+                                <EyeOff className="h-3 w-3 mr-1" />
+                                Draft
+                              </>
                             )}
-                          </Button>
-                        </div>
+                          </Badge>
+                        </td>
+
+                        {/* Homepage Rank */}
+                        <td className="p-3">
+                          <div className="flex items-center gap-1.5">
+                            <Input
+                              type="number"
+                              min="0"
+                              value={currentHomepageRank === null ? "" : currentHomepageRank}
+                              onChange={(e) => handleRankChange(story.id, "homepage", e.target.value)}
+                              className="w-16 h-8 text-sm transition-all border-slate-200"
+                              disabled={saving === `${story.id}-homepage` || !story.is_published}
+                              placeholder="—"
+                              aria-label={`Homepage rank for ${story.title}`}
+                              title={!story.is_published ? "Publish story first to set homepage rank" : "Enter homepage rank (lower = higher priority)"}
+                            />
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                playSound('save');
+                                handleSaveRank(story.id, "homepage");
+                              }}
+                              disabled={saving === `${story.id}-homepage` || currentHomepageRank === story.homepage_rank || !story.is_published}
+                              className="h-8 px-2 text-xs transition-all disabled:opacity-50 disabled:cursor-not-allowed border-slate-200"
+                              aria-label={`Save homepage rank for ${story.title}`}
+                              title={currentHomepageRank === story.homepage_rank ? "No changes to save" : !story.is_published ? "Publish story first" : "Save rank"}
+                              soundType="save"
+                              playHoverSound
+                            >
+                              {saving === `${story.id}-homepage` ? (
+                                <span className="animate-pulse text-xs">...</span>
+                              ) : (
+                                "Save"
+                              )}
+                            </Button>
+                          </div>
                         {hasHomepageCollision && (
                           <p className="text-xs text-amber-600 dark:text-amber-400 mt-1 flex items-center gap-1 animate-in fade-in">
                             <AlertTriangle className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
@@ -595,13 +701,16 @@ export default function RankingVisibilityPage() {
                         )}
                       </td>
 
-                      {/* Banner Toggle */}
-                      <td className="p-3">
+                        {/* Banner Toggle */}
+                        <td className="p-3">
                         <div className="space-y-2">
                           <div className="flex items-center gap-2">
                             <Checkbox
                               checked={story.is_banner}
-                              onCheckedChange={(checked) => handleToggleBanner(story.id, checked === true)}
+                              onCheckedChange={(checked) => {
+                                playSound('toggle');
+                                handleToggleBanner(story.id, checked === true);
+                              }}
                               disabled={saving === story.id || !story.is_published}
                               aria-label={`${story.is_banner ? "Remove from" : "Add to"} banner for ${story.title}`}
                             />
@@ -632,22 +741,25 @@ export default function RankingVisibilityPage() {
                         </div>
                       </td>
 
-                      {/* Banner Rank */}
-                      <td className="p-3">
-                        {story.is_banner ? (
-                          <span className="text-sm text-muted-foreground">N/A</span>
-                        ) : (
-                          <span className="text-sm text-muted-foreground/50">—</span>
-                        )}
-                      </td>
+                        {/* Banner Rank */}
+                        <td className="p-3">
+                          {story.is_banner ? (
+                            <span className="text-xs text-slate-400">N/A</span>
+                          ) : (
+                            <span className="text-xs text-slate-300">—</span>
+                          )}
+                        </td>
 
-                      {/* New Launch Toggle */}
-                      <td className="p-3">
+                        {/* New Launch Toggle */}
+                        <td className="p-3">
                         <div className="space-y-2">
                           <div className="flex items-center gap-2">
                             <Checkbox
                               checked={story.is_new_launch}
-                              onCheckedChange={(checked) => handleToggleNewLaunch(story.id, checked === true)}
+                              onCheckedChange={(checked) => {
+                                playSound('toggle');
+                                handleToggleNewLaunch(story.id, checked === true);
+                              }}
                               disabled={saving === story.id || !story.is_published}
                               aria-label={`${story.is_new_launch ? "Remove from" : "Add to"} new launches for ${story.title}`}
                             />
@@ -678,47 +790,54 @@ export default function RankingVisibilityPage() {
                         </div>
                       </td>
 
-                      {/* New Launch Rank */}
-                      <td className="p-3">
+                        {/* New Launch Rank */}
+                        <td className="p-3">
                         {story.is_new_launch ? (
-                          <div className="flex items-center gap-2">
-                            <Input
-                              type="number"
-                              min="0"
-                              value={currentNewLaunchRank === null ? "" : currentNewLaunchRank}
-                              onChange={(e) => handleRankChange(story.id, "newLaunch", e.target.value)}
-                              className="w-20 h-8 transition-all"
-                              disabled={saving === `${story.id}-newLaunch` || !story.is_new_launch}
-                              placeholder="Unranked"
-                              aria-label={`New launch rank for ${story.title}`}
-                              title="Enter new launch rank (lower = higher priority)"
-                            />
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleSaveRank(story.id, "newLaunch")}
-                              disabled={saving === `${story.id}-newLaunch` || currentNewLaunchRank === story.new_launch_rank || !story.is_new_launch}
-                              className="h-8 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                              aria-label={`Save new launch rank for ${story.title}`}
-                              title={currentNewLaunchRank === story.new_launch_rank ? "No changes to save" : !story.is_new_launch ? "Enable new launch first" : "Save rank"}
-                            >
-                              {saving === `${story.id}-newLaunch` ? (
-                                <span className="animate-pulse">...</span>
-                              ) : (
-                                "Save"
-                              )}
-                            </Button>
-                          </div>
+                            <div className="flex items-center gap-1.5">
+                              <Input
+                                type="number"
+                                min="0"
+                                value={currentNewLaunchRank === null ? "" : currentNewLaunchRank}
+                                onChange={(e) => handleRankChange(story.id, "newLaunch", e.target.value)}
+                                className="w-16 h-8 text-sm transition-all border-slate-200"
+                                disabled={saving === `${story.id}-newLaunch` || !story.is_new_launch}
+                                placeholder="—"
+                                aria-label={`New launch rank for ${story.title}`}
+                                title="Enter new launch rank (lower = higher priority)"
+                              />
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  playSound('save');
+                                  handleSaveRank(story.id, "newLaunch");
+                                }}
+                                disabled={saving === `${story.id}-newLaunch` || currentNewLaunchRank === story.new_launch_rank || !story.is_new_launch}
+                                className="h-8 px-2 text-xs transition-all disabled:opacity-50 disabled:cursor-not-allowed border-slate-200"
+                                aria-label={`Save new launch rank for ${story.title}`}
+                                title={currentNewLaunchRank === story.new_launch_rank ? "No changes to save" : !story.is_new_launch ? "Enable new launch first" : "Save rank"}
+                                soundType="save"
+                                playHoverSound
+                              >
+                                {saving === `${story.id}-newLaunch` ? (
+                                  <span className="animate-pulse text-xs">...</span>
+                                ) : (
+                                  "Save"
+                                )}
+                              </Button>
+                            </div>
                         ) : (
                           <span className="text-sm text-muted-foreground/50">—</span>
                         )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        </motion.div>
 
           {filteredStories.length === 0 && (
             <Card className="border-border/60">
@@ -767,8 +886,9 @@ export default function RankingVisibilityPage() {
               </CardContent>
             </Card>
           )}
-        </div>
-      )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

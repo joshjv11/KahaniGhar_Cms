@@ -17,6 +17,7 @@ import { Story, StoryInsert, Language } from "@/lib/types/database";
 import { useToast } from "@/components/ui/use-toast";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
+import { playSound } from "@/lib/utils/sounds";
 
 // Simplified schema - homepage fields removed from validation (managed separately)
 const storySchema = z.object({
@@ -39,6 +40,8 @@ export function StoryForm({ story }: StoryFormProps) {
   const router = useRouter();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [showHomepageInfo, setShowHomepageInfo] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const {
     register,
@@ -154,31 +157,31 @@ export function StoryForm({ story }: StoryFormProps) {
           <h3 className="text-xl font-semibold mb-1">Story Basics</h3>
           <p className="text-sm text-muted-foreground mb-6">Essential information about your story</p>
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="title">
+      <div className="space-y-2">
+        <Label htmlFor="title">
                 Story Title <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="title"
-                {...register("title")}
+        </Label>
+        <Input
+          id="title"
+          {...register("title")}
                 placeholder="Enter the story title (e.g., 'The Magic Forest')"
-              />
+        />
               <p className="text-sm text-muted-foreground">
                 This title will appear in the app and on the homepage.
               </p>
-              {errors.title && (
-                <p className="text-sm text-destructive">{errors.title.message}</p>
-              )}
-            </div>
+        {errors.title && (
+          <p className="text-sm text-destructive">{errors.title.message}</p>
+        )}
+      </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                {...register("description")}
+      <div className="space-y-2">
+        <Label htmlFor="description">Description</Label>
+        <Textarea
+          id="description"
+          {...register("description")}
                 placeholder="Brief description of the story (optional)"
-                rows={4}
-              />
+          rows={4}
+        />
               <p className="text-sm text-muted-foreground">
                 This description helps users discover your story. Keep it concise (2-3 sentences).
               </p>
@@ -200,33 +203,22 @@ export function StoryForm({ story }: StoryFormProps) {
               {errors.cover_image_url && (
                 <p className="text-sm text-destructive">{errors.cover_image_url.message}</p>
               )}
-            </div>
+      </div>
 
-            <div className="space-y-2">
-              <Label>Language <span className="text-destructive">*</span></Label>
-              <LanguageSelect
-                value={language}
-                onValueChange={(value) => setValue("language", value)}
-              />
+      <div className="space-y-2">
+        <Label>Language <span className="text-destructive">*</span></Label>
+        <LanguageSelect
+          value={language}
+          onValueChange={(value) => setValue("language", value)}
+        />
               <p className="text-sm text-muted-foreground">
                 Select the primary language for this story. Users can filter stories by language.
               </p>
-              {errors.language && (
-                <p className="text-sm text-destructive">{errors.language.message}</p>
-              )}
-            </div>
+        {errors.language && (
+          <p className="text-sm text-destructive">{errors.language.message}</p>
+        )}
+      </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="release_date">Release Date</Label>
-              <Input
-                id="release_date"
-                type="date"
-                {...register("release_date")}
-              />
-              <p className="text-sm text-muted-foreground">
-                When was this story released? Leave empty if not applicable. This is for reference only and does not control publishing.
-              </p>
-            </div>
           </div>
         </div>
       </div>
@@ -243,22 +235,25 @@ export function StoryForm({ story }: StoryFormProps) {
           <Checkbox
             id="is_published"
             checked={isPublished}
-            onCheckedChange={(checked) => setValue("is_published", checked === true)}
+            onCheckedChange={(checked) => {
+              playSound('toggle');
+              setValue("is_published", checked === true);
+            }}
           />
           <div className="space-y-1 flex-1">
-            <Label htmlFor="is_published" className="cursor-pointer">
+        <Label htmlFor="is_published" className="cursor-pointer">
               Publish this story (visible to users)
-            </Label>
-            <p className="text-sm text-muted-foreground">
+              </Label>
+              <p className="text-sm text-muted-foreground">
               When published, this story will be visible in the app. You can unpublish it later.
             </p>
             {!isPublished && (
               <p className="text-sm text-blue-600 dark:text-blue-400 mt-2 font-medium">
                 ℹ️ This story will be saved as a draft until published.
               </p>
-            )}
+              )}
+            </div>
           </div>
-        </div>
 
         {/* Story Readiness Score */}
         <div className="ml-6 mt-4">
@@ -311,7 +306,7 @@ export function StoryForm({ story }: StoryFormProps) {
                   <div className="flex items-center gap-2 text-muted-foreground">
                     ℹ️ Episodes can be added after saving
                   </div>
-                </div>
+            </div>
               </div>
             </CardContent>
           </Card>
@@ -340,36 +335,89 @@ export function StoryForm({ story }: StoryFormProps) {
 
       <hr className="border-border/60" />
 
-      {/* C. Homepage Configuration Info */}
+      {/* C. Homepage Configuration Info - Collapsible */}
       <div className="space-y-4">
-        <div>
-          <h3 className="text-xl font-semibold mb-1">Homepage Visibility</h3>
-          <p className="text-sm text-muted-foreground mb-4">Control how this story appears on the homepage</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-xl font-semibold mb-1">Homepage Settings</h3>
+            <p className="text-sm text-muted-foreground">Control how this story appears on the homepage</p>
+          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowHomepageInfo(!showHomepageInfo)}
+          >
+            {showHomepageInfo ? "Hide" : "Show"}
+          </Button>
         </div>
-        <Card className="border-border/60 bg-muted/30">
-          <CardContent className="pt-6">
-            <div className="space-y-3">
-              <p className="text-sm text-muted-foreground">
-                Homepage visibility, banner placement, and ranking are managed from the{" "}
-                <Link href="/admin/ranking-visibility" className="text-primary hover:underline font-medium">
-                  Ranking & Visibility
-                </Link>
-                {" "}page in the Content Control section.
-              </p>
-              <p className="text-xs text-muted-foreground/70">
-                After saving this story, you can configure its homepage placement, banner inclusion, and section ordering from the dedicated control page.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        {showHomepageInfo && (
+          <Card className="border-border/60 bg-muted/30">
+            <CardContent className="pt-6">
+              <div className="space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  Homepage visibility, banner placement, and ranking are managed from the{" "}
+                  <Link href="/admin/ranking-visibility" className="text-primary hover:underline font-medium">
+                    Ranking & Visibility
+                  </Link>
+                  {" "}page in the Content Control section.
+                </p>
+                <p className="text-xs text-muted-foreground/70">
+                  After saving this story, you can configure its homepage placement, banner inclusion, and section ordering from the dedicated control page.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
-      <div className="flex gap-4 pt-4 border-t">
-        <Button type="submit" disabled={loading}>
+      <hr className="border-border/60" />
+
+      {/* D. Advanced - Collapsible */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-xl font-semibold mb-1">Advanced</h3>
+            <p className="text-sm text-muted-foreground">Optional metadata and settings</p>
+          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowAdvanced(!showAdvanced)}
+          >
+            {showAdvanced ? "Hide" : "Show"}
+          </Button>
+        </div>
+        {showAdvanced && (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="release_date">Release Date</Label>
+              <Input
+                id="release_date"
+                type="date"
+                {...register("release_date")}
+              />
+              <p className="text-sm text-muted-foreground">
+                When was this story released? Leave empty if not applicable. This is for reference only and does not control publishing.
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="flex gap-4 pt-6 border-t">
+        <Button 
+          type="submit" 
+          disabled={loading} 
+          size="lg"
+          soundType={isPublished ? "success" : "save"}
+          playHoverSound
+        >
           {loading 
             ? "Saving..." 
             : story 
-              ? "Save Changes" 
+              ? (isPublished ? "Update Published Story" : "Save Changes")
               : isPublished 
                 ? "Publish Story" 
                 : "Save as Draft"}
@@ -379,9 +427,17 @@ export function StoryForm({ story }: StoryFormProps) {
           variant="outline"
           onClick={() => router.back()}
           disabled={loading}
+          size="lg"
+          soundType="click"
+          playHoverSound
         >
           Cancel
         </Button>
+        {!isPublished && !story && (
+          <div className="flex-1 flex items-center text-sm text-muted-foreground">
+            <span>💡 This will be saved as a draft. You can publish it later.</span>
+          </div>
+        )}
       </div>
     </form>
   </>

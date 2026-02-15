@@ -80,7 +80,10 @@ export default async function AdminStoriesPage() {
                     <div className="flex-1 space-y-3">
                       <CardTitle className="text-lg font-semibold leading-tight">{story.title}</CardTitle>
                       <div className="flex items-center gap-2 flex-wrap">
-                        <Badge variant={story.is_published ? "default" : "secondary"}>
+                        <Badge 
+                          variant={story.is_published ? "default" : "secondary"}
+                          className={story.is_published ? "font-semibold" : "font-semibold"}
+                        >
                           {story.is_published ? (
                             <>
                               <Eye className="h-3 w-3 mr-1" />
@@ -93,11 +96,11 @@ export default async function AdminStoriesPage() {
                             </>
                           )}
                         </Badge>
-                        <Badge variant="outline">
+                        <Badge variant="outline" className="font-semibold">
                           {languageLabels[story.language] || story.language}
                         </Badge>
                         {isHomepageEnabled && (
-                          <Badge variant="outline" className="border-blue-500 text-blue-700 dark:text-blue-400">
+                          <Badge variant="outline" className="border-2 border-blue-500/60 dark:border-blue-500/50 bg-blue-100/50 dark:bg-blue-900/30 text-blue-900 dark:text-blue-100 font-semibold">
                             <Home className="h-3 w-3 mr-1" />
                             Homepage
                           </Badge>

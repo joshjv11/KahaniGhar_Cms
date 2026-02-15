@@ -6,6 +6,7 @@ import { Story } from "@/lib/types/database";
 import { StoryCard } from "@/components/story/StoryCard";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import { motion } from "framer-motion";
 
 interface StoriesListProps {
   initialStories: Story[];
@@ -57,12 +58,23 @@ export function StoriesList({ initialStories }: StoriesListProps) {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {stories.map((story) => (
-        <StoryCard
+      {stories.map((story, index) => (
+        <motion.div
           key={story.id}
-          story={story}
-          onToggleArchive={handleToggleArchive}
-        />
+          initial={{ opacity: 0, y: 20, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{
+            duration: 0.3,
+            delay: index * 0.05,
+            ease: [0.16, 1, 0.3, 1], // ultra-smooth ease
+          }}
+          style={{ willChange: 'transform, opacity' }}
+        >
+          <StoryCard
+            story={story}
+            onToggleArchive={handleToggleArchive}
+          />
+        </motion.div>
       ))}
     </div>
   );

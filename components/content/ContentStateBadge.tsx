@@ -75,9 +75,9 @@ export function ContentStateBadge({ story, episodeCount = 0, className, showTool
     },
     featured: {
       label: "Featured",
-      variant: "default" as const,
+      variant: "premium" as const,
       icon: Star,
-      color: "text-amber-600 dark:text-amber-400",
+      color: "text-gold-600 dark:text-gold-400",
     },
     archived: {
       label: "Archived",
@@ -102,10 +102,10 @@ export function ContentStateBadge({ story, episodeCount = 0, className, showTool
       {state === "featured" && (
         <>
           {story.is_banner && (
-            <Home className="h-3 w-3 ml-1 text-amber-600 dark:text-amber-400" aria-label="Banner" />
+            <Home className="h-3 w-3 ml-1 text-gold-600 dark:text-gold-400" aria-label="Banner" />
           )}
           {story.is_new_launch && (
-            <Sparkles className="h-3 w-3 ml-1 text-amber-600 dark:text-amber-400" aria-label="New Launch" />
+            <Sparkles className="h-3 w-3 ml-1 text-gold-600 dark:text-gold-400" aria-label="New Launch" />
           )}
         </>
       )}

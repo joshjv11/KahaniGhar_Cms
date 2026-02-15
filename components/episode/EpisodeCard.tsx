@@ -24,9 +24,9 @@ export function EpisodeCard({ episode, onDelete }: EpisodeCardProps) {
                 <Badge variant="outline">Episode {episode.episode_number}</Badge>
               )}
               {episode.is_published ? (
-                <Badge>Published</Badge>
+                <Badge className="bg-emerald-200 dark:bg-emerald-900/40 text-emerald-900 dark:text-emerald-100 border-2 border-emerald-400 dark:border-emerald-600 font-semibold">Published</Badge>
               ) : (
-                <Badge variant="secondary">Draft</Badge>
+                <Badge variant="secondary" className="font-semibold">Draft</Badge>
               )}
             </div>
             {episode.description && (

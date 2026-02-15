@@ -89,7 +89,7 @@ export function HomepagePreview({ stories }: HomepagePreviewProps) {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{story.title}</p>
                   </div>
-                  <Badge variant="outline" className="text-xs">
+                  <Badge variant="outline" className="text-xs font-semibold">
                     Rank {story.homepage_rank}
                   </Badge>
                 </div>
