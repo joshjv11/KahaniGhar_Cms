@@ -10,12 +10,13 @@ import {
   Users,
   Heart,
   MessageSquare,
-  BarChart3,
   Home,
   ArrowUpDown,
-  Settings,
   Trash2,
+  PanelLeftClose,
+  PanelLeft,
 } from "lucide-react";
+import { useSidebarStore } from "@/lib/store/sidebar-store";
 
 interface NavItem {
   title: string;
@@ -24,77 +25,72 @@ interface NavItem {
 }
 
 const contentItems: NavItem[] = [
-  {
-    title: "Stories",
-    href: "/admin/stories",
-    icon: BookOpen,
-  },
-  {
-    title: "Episodes",
-    href: "/admin/episodes",
-    icon: FileText,
-  },
+  { title: "Stories", href: "/admin/stories", icon: BookOpen },
+  { title: "Episodes", href: "/admin/episodes", icon: FileText },
 ];
 
 const discoveryItems: NavItem[] = [
-  {
-    title: "Ranking & Visibility",
-    href: "/admin/ranking-visibility",
-    icon: ArrowUpDown,
-  },
+  { title: "Ranking & Visibility", href: "/admin/ranking-visibility", icon: ArrowUpDown },
 ];
 
 const usageItems: NavItem[] = [
-  {
-    title: "Listening Progress",
-    href: "/admin/listening-progress",
-    icon: Activity,
-  },
-  {
-    title: "Child Profiles",
-    href: "/admin/child-profiles",
-    icon: Users,
-  },
-  {
-    title: "Favorites",
-    href: "/admin/favorites",
-    icon: Heart,
-  },
+  { title: "Listening Progress", href: "/admin/listening-progress", icon: Activity },
+  { title: "Child Profiles", href: "/admin/child-profiles", icon: Users },
+  { title: "Favorites", href: "/admin/favorites", icon: Heart },
 ];
 
 const feedbackItems: NavItem[] = [
-  {
-    title: "Feedback Messages",
-    href: "/admin/feedback",
-    icon: MessageSquare,
-  },
+  { title: "Feedback Messages", href: "/admin/feedback", icon: MessageSquare },
 ];
 
 const contentControlItems: NavItem[] = [
-  {
-    title: "Ranking & Visibility",
-    href: "/admin/ranking-visibility",
-    icon: ArrowUpDown,
-  },
-  {
-    title: "Archive & Delete",
-    href: "/admin/archive-delete",
-    icon: Trash2,
-  },
+  { title: "Ranking & Visibility", href: "/admin/ranking-visibility", icon: ArrowUpDown },
+  { title: "Archive & Delete", href: "/admin/archive-delete", icon: Trash2 },
 ];
+
+function NavLink({
+  href,
+  icon: Icon,
+  title,
+  active,
+  collapsed,
+}: {
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  active: boolean;
+  collapsed: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      className={cn(
+        "relative flex items-center gap-3 rounded-lg text-sm font-medium transition-all duration-200",
+        "py-2.5",
+        collapsed ? "px-3 justify-center" : "px-3",
+        active
+          ? "text-[#FFB800] bg-white/5"
+          : "text-slate-400 hover:text-white hover:bg-white/5"
+      )}
+      title={collapsed ? title : undefined}
+    >
+      {active && (
+        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-6 bg-[#FFB800] rounded-r" />
+      )}
+      <Icon className={cn("h-5 w-5 shrink-0", active && "text-[#FFB800]")} />
+      {!collapsed && <span>{title}</span>}
+    </Link>
+  );
+}
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { collapsed, toggle } = useSidebarStore();
 
   const isActive = (href: string) => {
     if (!pathname) return false;
-    // For dashboard/overview, exact match
-    if (href === "/dashboard") {
-      return pathname === "/dashboard" || pathname === "/";
-    }
-    // Exact match or starts with the href path
+    if (href === "/dashboard") return pathname === "/dashboard" || pathname === "/";
     if (pathname === href) return true;
-    // For admin routes, check if pathname starts with the href
     if (href.startsWith("/admin") && pathname.startsWith(href)) return true;
     return false;
   };
@@ -102,193 +98,138 @@ export function Sidebar() {
   const isOverviewActive = pathname === "/dashboard" || pathname === "/";
 
   return (
-    <aside className="w-64 border-r-2 border-blue-primary/40 dark:border-blue-primary/30 bg-gradient-to-b from-white via-blue-50/20 to-gold-50/10 dark:from-navy dark:via-blue-950/50 dark:to-gold-950/20 backdrop-blur-md shadow-2xl dark:shadow-gold-500/10 h-[calc(100vh-73px)] fixed left-0 top-[73px] overflow-y-auto z-10 transition-all duration-300 ease-out-smooth">
-      {/* Sidebar edge decoration */}
-      <div className="absolute top-0 right-0 w-px h-full bg-gradient-to-b from-gold-500/50 via-blue-primary/30 to-transparent" />
-      <div className="p-6 space-y-10">
-        {/* Overview Section */}
-        <div>
-          <Link
-            href="/dashboard"
-            className={cn(
-              "relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ease-out-smooth group will-change-transform gpu-accelerated",
-              isOverviewActive
-                ? "bg-gradient-to-r from-blue-primary via-gold-500 to-blue-primary text-white font-semibold shadow-lg shadow-gold-500/40 dark:shadow-gold-500/30 animate-blue-gold-gradient"
-                : "text-slate-900 dark:text-slate-100 font-medium hover:bg-gradient-to-r hover:from-blue-50 hover:via-gold-50/30 hover:to-blue-50 dark:hover:from-blue-950/30 dark:hover:via-gold-950/20 dark:hover:to-blue-950/30 hover:text-blue-900 dark:hover:text-gold-300 hover:shadow-md hover:scale-[1.02]"
-            )}
+    <aside
+      className={cn(
+        "fixed left-0 top-[65px] z-10 h-[calc(100vh-65px)] overflow-y-auto transition-all duration-300",
+        "border-r border-white/5 bg-slate-950/50 backdrop-blur-xl",
+        collapsed ? "w-16" : "w-64"
+      )}
+    >
+      <div className={cn("flex flex-col h-full", collapsed ? "p-2" : "p-4")}>
+        <div className={cn("flex justify-end mb-4", collapsed && "justify-center")}>
+          <button
+            type="button"
+            onClick={toggle}
+            className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
-            <Home className={cn(
-              "h-5 w-5 transition-all duration-400 ease-[cubic-bezier(0.19,1,0.22,1)]",
-              isOverviewActive ? "text-white scale-110 drop-shadow-lg" : "text-slate-800 dark:text-slate-200 group-hover:text-gold-600 dark:group-hover:text-gold-300 group-hover:scale-110"
-            )} />
-            <span>Overview</span>
-          </Link>
+            {collapsed ? (
+              <PanelLeft className="h-5 w-5" />
+            ) : (
+              <PanelLeftClose className="h-5 w-5" />
+            )}
+          </button>
         </div>
 
-        {/* Content Section */}
-        <div className="space-y-3">
-          <div className="px-3 mb-1">
-            <h2 className="text-[10px] font-bold text-slate-800 dark:text-slate-200 uppercase tracking-widest">
+        <nav className="space-y-1">
+          <NavLink
+            href="/dashboard"
+            icon={Home}
+            title="Overview"
+            active={!!isOverviewActive}
+            collapsed={collapsed}
+          />
+        </nav>
+
+        {!collapsed && (
+          <div className="px-3 mt-4 mb-1">
+            <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">
               Content
-            </h2>
+            </span>
           </div>
-          <nav className="space-y-0.5">
-            {contentItems.map((item) => {
-              const Icon = item.icon;
-              const active = isActive(item.href);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-400 ease-[cubic-bezier(0.19,1,0.22,1)] group gpu-accelerated",
-                    active
-                      ? "bg-gradient-to-r from-blue-primary via-gold-500 to-blue-primary text-white font-semibold shadow-lg shadow-gold-500/40 dark:shadow-gold-500/30 animate-blue-gold-gradient"
-                      : "text-slate-900 dark:text-slate-100 font-medium hover:bg-gradient-to-r hover:from-blue-50 hover:via-gold-50/30 hover:to-blue-50 dark:hover:from-blue-950/30 dark:hover:via-gold-950/20 dark:hover:to-blue-950/30 hover:text-blue-900 dark:hover:text-gold-300 hover:shadow-md hover:scale-[1.02]"
-                  )}
-                >
-                  <Icon className={cn(
-                    "h-5 w-5 transition-all duration-400 ease-[cubic-bezier(0.19,1,0.22,1)]",
-                    active ? "text-white scale-110 drop-shadow-lg" : "text-slate-800 dark:text-slate-200 group-hover:text-gold-600 dark:group-hover:text-gold-300 group-hover:scale-110"
-                  )} />
-                  <span>{item.title}</span>
-                </Link>
-              );
-            })}
-          </nav>
-        </div>
+        )}
+        <nav className="space-y-0.5">
+          {contentItems.map((item) => (
+            <NavLink
+              key={item.href}
+              href={item.href}
+              icon={item.icon}
+              title={item.title}
+              active={isActive(item.href)}
+              collapsed={collapsed}
+            />
+          ))}
+        </nav>
 
-        {/* Discovery Section */}
-        <div className="space-y-3">
-          <div className="px-3 mb-1">
-            <h2 className="text-[10px] font-bold text-slate-800 dark:text-slate-200 uppercase tracking-widest">
+        {!collapsed && (
+          <div className="px-3 mt-4 mb-1">
+            <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">
               Discovery
-            </h2>
+            </span>
           </div>
-          <nav className="space-y-0.5">
-            {discoveryItems.map((item) => {
-              const Icon = item.icon;
-              const active = isActive(item.href);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-400 ease-[cubic-bezier(0.19,1,0.22,1)] group gpu-accelerated",
-                    active
-                      ? "bg-gradient-to-r from-blue-primary via-gold-500 to-blue-primary text-white font-semibold shadow-lg shadow-gold-500/40 dark:shadow-gold-500/30 animate-blue-gold-gradient"
-                      : "text-slate-900 dark:text-slate-100 font-medium hover:bg-gradient-to-r hover:from-blue-50 hover:via-gold-50/30 hover:to-blue-50 dark:hover:from-blue-950/30 dark:hover:via-gold-950/20 dark:hover:to-blue-950/30 hover:text-blue-900 dark:hover:text-gold-300 hover:shadow-md hover:scale-[1.02]"
-                  )}
-                >
-                  <Icon className={cn(
-                    "h-5 w-5 transition-all duration-400 ease-[cubic-bezier(0.19,1,0.22,1)]",
-                    active ? "text-white scale-110 drop-shadow-lg" : "text-slate-800 dark:text-slate-200 group-hover:text-gold-600 dark:group-hover:text-gold-300 group-hover:scale-110"
-                  )} />
-                  <span>{item.title}</span>
-                </Link>
-              );
-            })}
-          </nav>
-        </div>
+        )}
+        <nav className="space-y-0.5">
+          {discoveryItems.map((item) => (
+            <NavLink
+              key={item.href}
+              href={item.href}
+              icon={item.icon}
+              title={item.title}
+              active={isActive(item.href)}
+              collapsed={collapsed}
+            />
+          ))}
+        </nav>
 
-        {/* Usage & Activity Section */}
-        <div className="space-y-3">
-          <div className="px-3 mb-1">
-            <h2 className="text-[10px] font-bold text-slate-800 dark:text-slate-200 uppercase tracking-widest">
+        {!collapsed && (
+          <div className="px-3 mt-4 mb-1">
+            <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">
               Usage & Activity
-            </h2>
+            </span>
           </div>
-          <nav className="space-y-0.5">
-            {usageItems.map((item) => {
-              const Icon = item.icon;
-              const active = isActive(item.href);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-400 ease-[cubic-bezier(0.19,1,0.22,1)] group gpu-accelerated",
-                    active
-                      ? "bg-gradient-to-r from-blue-primary via-gold-500 to-blue-primary text-white font-semibold shadow-lg shadow-gold-500/40 dark:shadow-gold-500/30 animate-blue-gold-gradient"
-                      : "text-slate-900 dark:text-slate-100 font-medium hover:bg-gradient-to-r hover:from-blue-50 hover:via-gold-50/30 hover:to-blue-50 dark:hover:from-blue-950/30 dark:hover:via-gold-950/20 dark:hover:to-blue-950/30 hover:text-blue-900 dark:hover:text-gold-300 hover:shadow-md hover:scale-[1.02]"
-                  )}
-                >
-                  <Icon className={cn(
-                    "h-5 w-5 transition-all duration-400 ease-[cubic-bezier(0.19,1,0.22,1)]",
-                    active ? "text-white scale-110 drop-shadow-lg" : "text-slate-800 dark:text-slate-200 group-hover:text-gold-600 dark:group-hover:text-gold-300 group-hover:scale-110"
-                  )} />
-                  <span>{item.title}</span>
-                </Link>
-              );
-            })}
-          </nav>
-        </div>
+        )}
+        <nav className="space-y-0.5">
+          {usageItems.map((item) => (
+            <NavLink
+              key={item.href}
+              href={item.href}
+              icon={item.icon}
+              title={item.title}
+              active={isActive(item.href)}
+              collapsed={collapsed}
+            />
+          ))}
+        </nav>
 
-        {/* Content Control Section */}
-        <div className="space-y-3">
-          <div className="px-3 mb-1">
-            <h2 className="text-[10px] font-bold text-slate-800 dark:text-slate-200 uppercase tracking-widest">
+        {!collapsed && (
+          <div className="px-3 mt-4 mb-1">
+            <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">
               Content Control
-            </h2>
+            </span>
           </div>
-          <nav className="space-y-0.5">
-            {contentControlItems.map((item) => {
-              const Icon = item.icon;
-              const active = isActive(item.href);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-400 ease-[cubic-bezier(0.19,1,0.22,1)] group gpu-accelerated",
-                    active
-                      ? "bg-gradient-to-r from-blue-primary via-gold-500 to-blue-primary text-white font-semibold shadow-lg shadow-gold-500/40 dark:shadow-gold-500/30 animate-blue-gold-gradient"
-                      : "text-slate-900 dark:text-slate-100 font-medium hover:bg-gradient-to-r hover:from-blue-50 hover:via-gold-50/30 hover:to-blue-50 dark:hover:from-blue-950/30 dark:hover:via-gold-950/20 dark:hover:to-blue-950/30 hover:text-blue-900 dark:hover:text-gold-300 hover:shadow-md hover:scale-[1.02]"
-                  )}
-                >
-                  <Icon className={cn(
-                    "h-5 w-5 transition-all duration-400 ease-[cubic-bezier(0.19,1,0.22,1)]",
-                    active ? "text-white scale-110 drop-shadow-lg" : "text-slate-800 dark:text-slate-200 group-hover:text-gold-600 dark:group-hover:text-gold-300 group-hover:scale-110"
-                  )} />
-                  <span>{item.title}</span>
-                </Link>
-              );
-            })}
-          </nav>
-        </div>
+        )}
+        <nav className="space-y-0.5">
+          {contentControlItems.map((item) => (
+            <NavLink
+              key={item.href}
+              href={item.href}
+              icon={item.icon}
+              title={item.title}
+              active={isActive(item.href)}
+              collapsed={collapsed}
+            />
+          ))}
+        </nav>
 
-        {/* Feedback Section */}
-        <div className="space-y-3">
-          <div className="px-3 mb-1">
-            <h2 className="text-[10px] font-bold text-slate-800 dark:text-slate-200 uppercase tracking-widest">
+        {!collapsed && (
+          <div className="px-3 mt-4 mb-1">
+            <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">
               Feedback
-            </h2>
+            </span>
           </div>
-          <nav className="space-y-0.5">
-            {feedbackItems.map((item) => {
-              const Icon = item.icon;
-              const active = isActive(item.href);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-400 ease-[cubic-bezier(0.19,1,0.22,1)] group gpu-accelerated",
-                    active
-                      ? "bg-gradient-to-r from-blue-primary via-gold-500 to-blue-primary text-white font-semibold shadow-lg shadow-gold-500/40 dark:shadow-gold-500/30 animate-blue-gold-gradient"
-                      : "text-slate-900 dark:text-slate-100 font-medium hover:bg-gradient-to-r hover:from-blue-50 hover:via-gold-50/30 hover:to-blue-50 dark:hover:from-blue-950/30 dark:hover:via-gold-950/20 dark:hover:to-blue-950/30 hover:text-blue-900 dark:hover:text-gold-300 hover:shadow-md hover:scale-[1.02]"
-                  )}
-                >
-                  <Icon className={cn(
-                    "h-5 w-5 transition-all duration-400 ease-[cubic-bezier(0.19,1,0.22,1)]",
-                    active ? "text-white scale-110 drop-shadow-lg" : "text-slate-800 dark:text-slate-200 group-hover:text-gold-600 dark:group-hover:text-gold-300 group-hover:scale-110"
-                  )} />
-                  <span>{item.title}</span>
-                </Link>
-              );
-            })}
-          </nav>
-        </div>
+        )}
+        <nav className="space-y-0.5">
+          {feedbackItems.map((item) => (
+            <NavLink
+              key={item.href}
+              href={item.href}
+              icon={item.icon}
+              title={item.title}
+              active={isActive(item.href)}
+              collapsed={collapsed}
+            />
+          ))}
+        </nav>
       </div>
     </aside>
   );

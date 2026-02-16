@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { EpisodeList } from "@/components/episode/EpisodeList";
 import Link from "next/link";
 import { Plus, Edit, ArrowLeft } from "lucide-react";
@@ -41,12 +42,12 @@ export default async function StoryDetailPage({ params }: StoryDetailPageProps) 
 
   return (
     <div className="container mx-auto py-8">
-      <Link href="/dashboard">
-        <Button variant="ghost" className="mb-4">
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Stories
-        </Button>
-      </Link>
+      <Breadcrumb
+        items={[
+          { label: "Stories", href: "/admin/stories" },
+          { label: story.title },
+        ]}
+      />
 
       <Card className="mb-8">
         <CardHeader>

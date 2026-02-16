@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
@@ -18,6 +18,8 @@ import { useToast } from "@/components/ui/use-toast";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { playSound } from "@/lib/utils/sounds";
+import { useSidebarStore } from "@/lib/store/sidebar-store";
+import { cn } from "@/lib/utils/cn";
 
 // Simplified schema - homepage fields removed from validation (managed separately)
 const storySchema = z.object({
@@ -39,6 +41,7 @@ interface StoryFormProps {
 export function StoryForm({ story }: StoryFormProps) {
   const router = useRouter();
   const { toast } = useToast();
+  const collapsed = useSidebarStore((s) => s.collapsed);
   const [loading, setLoading] = useState(false);
   const [showHomepageInfo, setShowHomepageInfo] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -66,6 +69,19 @@ export function StoryForm({ story }: StoryFormProps) {
   const title = watch("title");
   const description = watch("description");
   const coverImageUrl = watch("cover_image_url");
+
+  // Ctrl+S / Cmd+S to save
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "s") {
+        e.preventDefault();
+        const form = document.getElementById("story-form") as HTMLFormElement | null;
+        if (!loading && form) form.requestSubmit();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [loading]);
 
   const onSubmit = async (data: StoryFormData) => {
     setLoading(true);
@@ -150,7 +166,7 @@ export function StoryForm({ story }: StoryFormProps) {
 
   return (
     <>
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+    <form id="story-form" onSubmit={handleSubmit(onSubmit)} className="space-y-8 pb-32">
       {/* A. Story Basics */}
       <div className="space-y-6">
         <div>
@@ -440,6 +456,34 @@ export function StoryForm({ story }: StoryFormProps) {
         )}
       </div>
     </form>
+
+    {/* Sticky save bar - always visible when scrolling */}
+    <div className={cn("fixed bottom-0 left-0 right-0 z-40 border-t border-white/10 bg-slate-900/95 backdrop-blur-md py-4 px-6 transition-[margin-left] duration-300", collapsed ? "ml-16" : "ml-64")}>
+      <div className="container max-w-2xl mx-auto flex items-center justify-between">
+        <p className="text-sm text-slate-400 truncate max-w-[50%]">
+          {title || "Untitled Story"}
+        </p>
+        <div className="flex gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => router.back()}
+            disabled={loading}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            form="story-form"
+            disabled={loading}
+            size="sm"
+          >
+            {loading ? "Saving..." : "Save Changes"}
+          </Button>
+        </div>
+      </div>
+    </div>
   </>
   );
 }

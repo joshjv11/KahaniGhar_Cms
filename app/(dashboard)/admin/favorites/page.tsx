@@ -69,10 +69,10 @@ export default async function AdminFavoritesPage() {
     return acc;
   }, {} as Record<string, number>);
 
-  const topStories = Object.entries(storyCounts)
+  const topStories = (Object.entries(storyCounts) as [string, number][])
     .sort(([, a], [, b]) => b - a)
     .slice(0, 5);
-  const topEpisodes = Object.entries(episodeCounts)
+  const topEpisodes = (Object.entries(episodeCounts) as [string, number][])
     .sort(([, a], [, b]) => b - a)
     .slice(0, 5);
 

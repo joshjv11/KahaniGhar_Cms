@@ -4,78 +4,72 @@
 
 @layer base {
   :root {
-    /* Blue-Black-Gold Theme - Light Mode */
-    --background: 239 246 255; /* #EFF6FF - Bright blue tint */
-    --foreground: 15 23 42; /* #0F172A - Deep black/navy */
-    --card: 255 255 255; /* #FFFFFF - White */
-    --card-foreground: 15 23 42; /* #0F172A - Deep black/navy */
-    --popover: 255 255 255;
+    /* Midnight Glass - Light (fallback for system light) */
+    --background: 226 232 240; /* slate-200 - soft light */
+    --foreground: 15 23 42; /* #0F172A */
+    --card: 248 250 252; /* slate-50 */
+    --card-foreground: 15 23 42;
+    --popover: 248 250 252;
     --popover-foreground: 15 23 42;
-    --primary: 37 99 235; /* #2563EB - Royal blue */
-    --primary-foreground: 255 255 255;
-    --secondary: 241 245 249; /* #F1F5F9 - Light blue-gray */
-    --secondary-foreground: 30 41 59; /* #1E293B - Navy */
-    --muted: 241 245 249;
-    --muted-foreground: 100 116 139; /* #64748B - Slate */
-    --accent: 255 176 0; /* #FFB000 - Amber gold */
-    --accent-foreground: 15 23 42;
+    --primary: 45 100% 50%; /* #FFB800 - Gold for actions */
+    --primary-foreground: 222 47% 11%; /* dark text on gold */
+    --secondary: 226 232 240;
+    --secondary-foreground: 30 41 59;
+    --muted: 226 232 240;
+    --muted-foreground: 100 116 139;
+    --accent: 45 100% 50%;
+    --accent-foreground: 222 47% 11%;
     --destructive: 239 68 68;
     --destructive-foreground: 255 255 255;
-    --border: 203 213 225; /* #CBD5E1 - Blue-gray */
+    --border: 203 213 225;
     --input: 203 213 225;
-    --ring: 37 99 235; /* #2563EB - Royal blue */
+    --ring: 45 100% 50%;
     --radius: 0.5rem;
-    
-    /* Custom Blue-Black-Gold Colors */
-    --blue-primary: 37 99 235; /* #2563EB - More vibrant */
-    --blue-dark: 29 78 216; /* #1D4ED8 */
-    --gold: 255 184 0; /* #FFB800 - More vibrant gold */
-    --gold-dark: 255 165 0; /* #FFA500 */
-    --black: 15 23 42; /* #0F172A */
-    --navy: 30 41 59; /* #1E293B */
-    
+    --blue-primary: 37 99 235;
+    --blue-dark: 29 78 216;
+    --gold: 255 184 0;
+    --gold-dark: 255 165 0;
+    --black: 15 23 42;
+    --navy: 30 41 59;
     --chart-1: 37 99 235;
     --chart-2: 255 176 0;
-    --chart-3: 29 78 216;
-    --chart-4: 255 165 0;
-    --chart-5: 59 130 246;
+    --chart-3: 34 197 94;
+    --chart-4: 234 179 8;
+    --chart-5: 148 163 184;
   }
 
   .dark {
-    /* Blue-Black-Gold Theme - Dark Mode */
-    --background: 10 14 39; /* #0A0E27 - Deep black with blue undertones */
-    --foreground: 241 245 249; /* #F1F5F9 - Light gray */
-    --card: 30 41 59; /* #1E293B - Dark navy */
-    --card-foreground: 241 245 249;
-    --popover: 30 41 59;
-    --popover-foreground: 241 245 249;
-    --primary: 59 130 246; /* #3B82F6 - Bright blue */
-    --primary-foreground: 255 255 255;
-    --secondary: 51 65 85; /* #334155 - Dark blue-gray */
-    --secondary-foreground: 241 245 249;
-    --muted: 51 65 85;
-    --muted-foreground: 148 163 184; /* #94A3B8 - Light slate */
-    --accent: 255 176 0; /* #FFB000 - Warm amber gold */
-    --accent-foreground: 15 23 42;
+    /* Midnight Glass - Deep matte base */
+    --background: 222 47% 6%; /* ~#020617 - slate-950 */
+    --foreground: 210 40% 98%; /* white-ish headings */
+    --card: 222 47% 11%; /* slate-900 - glass surface */
+    --card-foreground: 210 40% 98%;
+    --popover: 222 47% 11%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 45 100% 50%; /* #FFB800 - Gold for primary buttons only */
+    --primary-foreground: 222 47% 11%;
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%; /* slate-400 secondary text */
+    --accent: 45 100% 50%;
+    --accent-foreground: 222 47% 11%;
     --destructive: 239 68 68;
     --destructive-foreground: 255 255 255;
-    --border: 51 65 85; /* #334155 - Dark blue-gray */
-    --input: 51 65 85;
-    --ring: 59 130 246; /* #3B82F6 - Bright blue */
-    
-    /* Custom Blue-Black-Gold Colors - Dark Mode */
-    --blue-primary: 59 130 246; /* #3B82F6 */
-    --blue-dark: 37 99 235; /* #2563EB */
-    --gold: 255 176 0; /* #FFB000 */
-    --gold-dark: 255 165 0; /* #FFA500 */
-    --black: 15 23 42; /* #0F172A */
-    --navy: 30 41 59; /* #1E293B */
-    
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 45 100% 50%;
+    --blue-primary: 59 130 246;
+    --blue-dark: 37 99 235;
+    --gold: 255 176 0;
+    --gold-dark: 255 165 0;
+    --black: 15 23 42;
+    --navy: 30 41 59;
     --chart-1: 59 130 246;
     --chart-2: 255 176 0;
-    --chart-3: 37 99 235;
-    --chart-4: 255 165 0;
-    --chart-5: 96 165 250;
+    --chart-3: 34 197 94;
+    --chart-4: 234 179 8;
+    --chart-5: 148 163 184;
   }
 }
 

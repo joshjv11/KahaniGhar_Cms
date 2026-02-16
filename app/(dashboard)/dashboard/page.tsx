@@ -1,13 +1,41 @@
 import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Plus, ArrowUpDown, BookOpen, FileText, AlertCircle, Clock, Image as ImageIcon } from "lucide-react";
-import { StoriesList } from "@/components/story/StoriesList";
+import {
+  Plus,
+  ArrowUpDown,
+  FileText,
+  AlertCircle,
+  Clock,
+  Image as ImageIcon,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Story } from "@/lib/types/database";
+import { DashboardGreeting } from "@/components/dashboard/DashboardGreeting";
+import { SparklineCard } from "@/components/dashboard/SparklineCard";
+import { RecentStoriesCarousel } from "@/components/dashboard/RecentStoriesCarousel";
 
 interface StoryWithEpisodeCount extends Story {
   episode_count: number;
+}
+
+function getLast7DaysTrend(stories: StoryWithEpisodeCount[]) {
+  const days: { name: string; value: number }[] = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const dayStart = new Date(d);
+    dayStart.setHours(0, 0, 0, 0);
+    const dayEnd = new Date(d);
+    dayEnd.setHours(23, 59, 59, 999);
+    const label = dayStart.toLocaleDateString("en-US", { weekday: "short" });
+    const count = stories.filter((s) => {
+      const created = new Date(s.created_at);
+      return created >= dayStart && created <= dayEnd;
+    }).length;
+    days.push({ name: label, value: count });
+  }
+  return days;
 }
 
 export default async function DashboardPage() {
@@ -22,7 +50,6 @@ export default async function DashboardPage() {
     console.error("Error fetching stories:", error);
   }
 
-  // Fetch episode counts for all stories
   const storiesWithCounts: StoryWithEpisodeCount[] = await Promise.all(
     (stories || []).map(async (story) => {
       const { count } = await supabase
@@ -36,13 +63,13 @@ export default async function DashboardPage() {
     })
   );
 
-  // Calculate dashboard stats
   const totalStories = storiesWithCounts.length;
   const publishedCount = storiesWithCounts.filter((s) => s.is_published).length;
   const draftCount = totalStories - publishedCount;
-  const storiesWithZeroEpisodes = storiesWithCounts.filter((s) => s.episode_count === 0).length;
-  
-  // Recently updated (last 7 days) - using created_at as proxy
+  const storiesWithZeroEpisodes = storiesWithCounts.filter(
+    (s) => s.episode_count === 0
+  ).length;
+
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
   const recentlyUpdated = storiesWithCounts.filter((story) => {
@@ -50,12 +77,9 @@ export default async function DashboardPage() {
     return updatedAt >= sevenDaysAgo;
   }).length;
 
-  // Next Actions: Stories published but missing episodes
   const publishedWithoutEpisodes = storiesWithCounts.filter(
     (s) => s.is_published && s.episode_count === 0
   );
-
-  // Next Actions: Drafts not updated in 30 days
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
   const staleDrafts = storiesWithCounts.filter((story) => {
@@ -63,131 +87,139 @@ export default async function DashboardPage() {
     const updatedAt = new Date(story.created_at);
     return updatedAt < thirtyDaysAgo;
   });
-
-  // Next Actions: Homepage stories missing images
   const homepageStoriesMissingImages = storiesWithCounts.filter(
-    (s) => (s.is_banner && !s.banner_image_url) || (s.is_new_launch && !s.tile_image_url)
+    (s) =>
+      (s.is_banner && !s.banner_image_url) ||
+      (s.is_new_launch && !s.tile_image_url)
   );
 
-  // Get recently updated stories (last 7 days) for display
   const recentlyUpdatedStories = storiesWithCounts
     .filter((story) => {
       const updatedAt = new Date(story.created_at);
       return updatedAt >= sevenDaysAgo;
     })
-    .slice(0, 12); // Limit to 12 for display
+    .slice(0, 12);
+
+  const trendData = getLast7DaysTrend(storiesWithCounts);
 
   return (
     <div className="container mx-auto py-10 px-8 max-w-7xl animate-in fade-in duration-300 relative">
-      {/* Decorative corner elements */}
-      <div className="absolute top-0 left-0 w-64 h-64 bg-gold-500/5 dark:bg-gold-500/10 rounded-full blur-3xl -z-10" />
-      <div className="absolute bottom-0 right-0 w-64 h-64 bg-blue-primary/10 dark:bg-blue-primary/20 rounded-full blur-3xl -z-10" />
-      <div className="mb-10">
-        <h1 className="text-4xl font-bold tracking-tight mb-3 bg-gradient-to-r from-blue-primary via-gold-500 to-blue-primary bg-clip-text text-transparent animate-blue-gold-gradient">Overview</h1>
-        <p className="text-slate-600 dark:text-slate-300 text-base leading-relaxed">
-          System snapshot and content management
-        </p>
-      </div>
+      <DashboardGreeting draftCount={draftCount} />
 
-      {/* Dashboard Overview Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <Card className="bg-gradient-to-br from-blue-100/90 via-gold-100/40 to-blue-100/90 dark:from-blue-900/40 dark:via-gold-900/20 dark:to-blue-900/40 border-2 border-blue-primary/50 dark:border-blue-primary/40 hover:border-gold-500/60 dark:hover:border-gold-500/50 hover:shadow-2xl hover:shadow-gold-500/30 dark:hover:shadow-gold-500/20 transition-all duration-300 transform hover:scale-[1.02] gpu-accelerated">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold text-blue-primary dark:text-blue-400">Total Stories</CardTitle>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-slate-400">
+              Total Stories
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-4xl font-bold bg-gradient-to-r from-blue-primary to-gold-500 bg-clip-text text-transparent">{totalStories}</div>
+            <div className="text-3xl font-bold text-white">{totalStories}</div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-emerald-100/90 via-gold-100/30 to-emerald-100/90 dark:from-emerald-900/30 dark:via-gold-900/15 dark:to-emerald-900/30 border-2 border-emerald-500/40 dark:border-emerald-500/30 hover:border-gold-500/60 dark:hover:border-gold-500/50 hover:shadow-2xl hover:shadow-gold-500/30 dark:hover:shadow-gold-500/20 transition-all duration-300 transform hover:scale-[1.02] gpu-accelerated">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold text-slate-700">Published vs Draft</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-4xl font-bold">
-              <span className="text-emerald-600">{publishedCount}</span>
-              <span className="text-slate-400 mx-2">/</span>
-              <span className="text-slate-500">{draftCount}</span>
-            </div>
-            <p className="text-xs text-slate-600 mt-1 font-medium">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-slate-400">
               Published / Draft
-            </p>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-white">
+              <span className="text-emerald-400">{publishedCount}</span>
+              <span className="text-slate-500 mx-2">/</span>
+              <span className="text-slate-400">{draftCount}</span>
+            </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-gold-200/90 via-amber-200/50 to-gold-200/90 dark:from-gold-900/40 dark:via-amber-900/25 dark:to-gold-900/40 border-2 border-gold-500/60 dark:border-gold-500/50 hover:border-gold-500/80 dark:hover:border-gold-500/70 hover:shadow-2xl hover:shadow-gold-500/40 dark:hover:shadow-gold-500/30 transition-all duration-300 transform hover:scale-[1.02] gpu-accelerated animate-gold-glow">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold text-gold-700 dark:text-gold-400">Stories with 0 Episodes</CardTitle>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-slate-400">
+              Stories with 0 Episodes
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-4xl font-bold text-gold-600 dark:text-gold-500">{storiesWithZeroEpisodes}</div>
+            <div className="text-3xl font-bold text-amber-400">
+              {storiesWithZeroEpisodes}
+            </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-blue-100/90 via-purple-100/30 to-blue-100/90 dark:from-blue-900/40 dark:via-purple-900/20 dark:to-blue-900/40 border-2 border-blue-primary/50 dark:border-blue-primary/40 hover:border-gold-500/60 dark:hover:border-gold-500/50 hover:shadow-2xl hover:shadow-gold-500/30 dark:hover:shadow-gold-500/20 transition-all duration-300 transform hover:scale-[1.02] gpu-accelerated">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold text-blue-primary dark:text-blue-400">Recently Updated</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-4xl font-bold bg-gradient-to-r from-blue-primary to-gold-500 bg-clip-text text-transparent">{recentlyUpdated}</div>
-            <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 font-medium">
-              Last 7 days
-            </p>
-          </CardContent>
-        </Card>
+        <SparklineCard
+          title="Recently Updated"
+          value={recentlyUpdated}
+          subLabel="Last 7 days"
+          data={trendData}
+          valueClassName="text-[#FFB800]"
+        />
       </div>
 
-      {/* Next Actions Panel */}
-      {(publishedWithoutEpisodes.length > 0 || staleDrafts.length > 0 || homepageStoriesMissingImages.length > 0) && (
-        <Card className="mb-8 border-2 border-gold-500/50 dark:border-gold-500/40 bg-gradient-to-br from-gold-100/70 via-amber-100/40 to-gold-100/70 dark:from-gold-900/30 dark:via-amber-900/20 dark:to-gold-900/30 hover:border-gold-500/70 dark:hover:border-gold-500/60 hover:shadow-2xl hover:shadow-gold-500/30 dark:hover:shadow-gold-500/20 transition-all duration-300 transform hover:scale-[1.01] gpu-accelerated">
+      {(publishedWithoutEpisodes.length > 0 ||
+        staleDrafts.length > 0 ||
+        homepageStoriesMissingImages.length > 0) && (
+        <Card className="mb-8 border-amber-500/30">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-gold-700 dark:text-gold-400">
-              <AlertCircle className="h-5 w-5 text-gold-600 dark:text-gold-500" />
+            <CardTitle className="flex items-center gap-2 text-amber-400 text-base">
+              <AlertCircle className="h-4 w-4" />
               Next Actions
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-3 text-sm">
             {publishedWithoutEpisodes.length > 0 && (
               <div className="flex items-start gap-3">
-                <FileText className="h-4 w-4 text-amber-600 mt-0.5" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium">
-                    {publishedWithoutEpisodes.length} published {publishedWithoutEpisodes.length === 1 ? "story" : "stories"} missing episodes
+                <FileText className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-white font-medium">
+                    {publishedWithoutEpisodes.length} published story
+                    {publishedWithoutEpisodes.length !== 1 ? "ies" : ""} missing
+                    episodes
                   </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {publishedWithoutEpisodes.slice(0, 3).map((s) => s.title).join(", ")}
-                    {publishedWithoutEpisodes.length > 3 && ` +${publishedWithoutEpisodes.length - 3} more`}
+                  <p className="text-slate-400 text-xs mt-1">
+                    {publishedWithoutEpisodes
+                      .slice(0, 3)
+                      .map((s) => s.title)
+                      .join(", ")}
+                    {publishedWithoutEpisodes.length > 3 &&
+                      ` +${publishedWithoutEpisodes.length - 3} more`}
                   </p>
                 </div>
               </div>
             )}
-
             {staleDrafts.length > 0 && (
               <div className="flex items-start gap-3">
-                <Clock className="h-4 w-4 text-amber-600 mt-0.5" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium">
-                    {staleDrafts.length} draft {staleDrafts.length === 1 ? "story" : "stories"} not updated in 30+ days
+                <Clock className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-white font-medium">
+                    {staleDrafts.length} draft not updated in 30+ days
                   </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {staleDrafts.slice(0, 3).map((s) => s.title).join(", ")}
-                    {staleDrafts.length > 3 && ` +${staleDrafts.length - 3} more`}
+                  <p className="text-slate-400 text-xs mt-1">
+                    {staleDrafts
+                      .slice(0, 3)
+                      .map((s) => s.title)
+                      .join(", ")}
+                    {staleDrafts.length > 3 &&
+                      ` +${staleDrafts.length - 3} more`}
                   </p>
                 </div>
               </div>
             )}
-
             {homepageStoriesMissingImages.length > 0 && (
               <div className="flex items-start gap-3">
-                <ImageIcon className="h-4 w-4 text-amber-600 mt-0.5" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium">
-                    {homepageStoriesMissingImages.length} homepage {homepageStoriesMissingImages.length === 1 ? "story" : "stories"} missing images
+                <ImageIcon className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-white font-medium">
+                    {homepageStoriesMissingImages.length} homepage story
+                    {homepageStoriesMissingImages.length !== 1 ? "ies" : ""}{" "}
+                    missing images
                   </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {homepageStoriesMissingImages.slice(0, 3).map((s) => s.title).join(", ")}
-                    {homepageStoriesMissingImages.length > 3 && ` +${homepageStoriesMissingImages.length - 3} more`}
+                  <p className="text-slate-400 text-xs mt-1">
+                    {homepageStoriesMissingImages
+                      .slice(0, 3)
+                      .map((s) => s.title)
+                      .join(", ")}
+                    {homepageStoriesMissingImages.length > 3 &&
+                      ` +${homepageStoriesMissingImages.length - 3} more`}
                   </p>
                 </div>
               </div>
@@ -196,36 +228,25 @@ export default async function DashboardPage() {
         </Card>
       )}
 
-      {/* Recently Updated Stories */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h2 className="text-2xl font-bold mb-1 text-slate-900 dark:text-slate-100">Recently Updated Stories</h2>
-          <p className="text-slate-700 dark:text-slate-300 text-sm font-medium">
-            Quick access to recently modified content
-          </p>
-        </div>
+      <div className="flex items-center justify-between mb-6">
+        <div />
         <div className="flex items-center gap-3">
           <Link href="/admin/ranking-visibility">
-            <Button variant="outline" soundType="click" playHoverSound>
+            <Button variant="outline" size="sm">
               <ArrowUpDown className="h-4 w-4 mr-2" />
               Manage Rankings
             </Button>
           </Link>
-        <Link href="/stories/new">
-            <Button 
-              variant="outline" 
-              soundType="success" 
-              playHoverSound
-              className="bg-gradient-to-r from-gold-100 to-gold-50 dark:from-gold-900/30 dark:to-gold-800/20 border-2 border-gold-500/50 dark:border-gold-500/40 text-slate-900 dark:text-slate-100 font-semibold hover:from-gold-200 hover:to-gold-100 dark:hover:from-gold-800/40 dark:hover:to-gold-700/30 hover:border-gold-600 dark:hover:border-gold-500 hover:shadow-xl hover:shadow-gold-500/30"
-            >
-            <Plus className="h-4 w-4 mr-2" />
-            Add New Story
-          </Button>
-        </Link>
+          <Link href="/stories/new">
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Add New Story
+            </Button>
+          </Link>
         </div>
       </div>
 
-      <StoriesList initialStories={recentlyUpdatedStories} />
+      <RecentStoriesCarousel stories={recentlyUpdatedStories} />
     </div>
   );
 }
